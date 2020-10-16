@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Typography, Button, Form, Input } from 'antd'
 import FileUpload from '../../utils/FileUpload'
+import axios from 'axios';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -15,7 +16,7 @@ const Continents = [
     { key: 7, value: 'Antarctica' }
 ]
 
-function UploadProductPage() {
+function UploadProductPage(props) {
     const [ContinentValue, setContinentValue] = useState(1)
     const [TitleValue, setTitleValue] = useState('')
     const [DescriptionValue, setDescriptionValue] = useState('')
@@ -42,13 +43,40 @@ function UploadProductPage() {
     const updateImages = (newImages) => {
         setImages(newImages)
     }
+
+    const onSubmit = (event) => {
+        event.preventDefault();
+
+        if (!TitleValue || !DescriptionValue || !PriceValue || !ContinentValue || !Images) {
+            return alert('Please fill all the fields first!')
+        } else {
+            const variables = {
+                writer: props.user.userData._id,
+                title: TitleValue,
+                description: DescriptionValue,
+                price: parseFloat(PriceValue),
+                images: Images,
+                continents: parseInt(ContinentValue)
+            }
+            console.log(variables)
+
+            axios.post('/api/product/uploadProduct', variables)
+                .then(response => {
+                    if (response.data.success) {
+                        alert('Product Successfully Uploaded!')
+                    } else {
+                        alert('Failed to upload this product!')
+                    }
+                })
+        }
+    }
     return (
         <div style={{ maxWidth: '700px', margin: '2rem auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                 <Title level={2}>Upload Travel Product</Title>
             </div>
 
-            <Form>
+            <Form onSubmit={onSubmit}>
                 {/* Drop Image Zone - We do this later */}
                 <FileUpload refreshFunction={updateImages} />
 
@@ -63,18 +91,18 @@ function UploadProductPage() {
                 <br />
                 <br />
                 <label>Price($)</label>
-                <Input value={PriceValue} onChange={onPriceValueChange} />
+                <Input value={PriceValue} onChange={onPriceValueChange} type='number' />
                 <br />
                 <br />
                 <select onChange={onContinentsSelectChange} value={ContinentValue}>
                     {Continents.map(item => (
-                        <option key={item.key} value={item.value}>{item.value}</option>
+                        <option key={item.key} value={item.key}>{item.value}</option>
                     ))}
                 </select>
 
                 <br />
                 <br />
-                <Button>Submit</Button>
+                <Button onClick={onSubmit}>Submit</Button>
             </Form>
         </div>
     )

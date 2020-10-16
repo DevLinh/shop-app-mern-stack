@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
-// const { User } = require("../models/User");
+
 const multer = require('multer')
 const { auth } = require("../middleware/auth");
+const { Product } = require('../models/Product');
 
 
 var storage = multer.diskStorage({
@@ -33,6 +34,16 @@ router.post('/uploadImage', auth, (req, res) => {
             return res.json({ success: false, err })
         }
         return res.json({ success: true, image: res.req.file.path, fileName: req.file.filename })
+    })
+})
+
+router.post('/uploadProduct', auth, (req, res) => {
+    //save all the data we got from client into the db
+    const product = new Product(req.body)
+
+    product.save((err) => {
+        if (err) return res.status(400).json({ success: false, err })
+        return res.status(200).json({ success: true })
     })
 })
 
