@@ -24,7 +24,18 @@ function FileUpload(props) {
                     console.log('Failed to save the image in sever')
                 }
             })
+    }
 
+    //create a function that delete the clicked image
+    const onDelete = (image) => {
+        //get the index of this image in Images
+        const currentIndex = Images.indexOf(image);
+
+        let newImages = [...Images]
+        newImages.splice(currentIndex, 1)
+
+        setImages(newImages)
+        props.refreshFunction(newImages)
     }
 
     return (
@@ -50,7 +61,7 @@ function FileUpload(props) {
             <div style={{ display: 'flex', width: '350px', height: '240px', overflowX: 'scroll' }}>
                 {
                     Images.map((image, index) => (
-                        <div key={index}>
+                        <div key={index} onClick={() => onDelete(image)}>
                             <img
                                 style={{ minWidth: '300px', width: '300px', height: '240px' }}
                                 src={`http://localhost:5000/${image}`} alt={`productImg-${index}`}
