@@ -2,21 +2,40 @@ import React, { useState, useEffect } from 'react'
 import { Card, Col, Icon, Row } from 'antd';
 import Axios from 'axios';
 import ImageSlider from '../../utils/ImageSlider';
+import CheckBox from '../../utils/CheckBox';
+import { continents } from '../../utils/Data'
 const { Meta } = Card;
 
 function LandingPage() {
 
     const [Products, setProducts] = useState([])
-
+    const [Skip, setSkip] = useState(0)
+    const [Limit, setLimit] = useState(2)
+    const [PostSize, setPostSize] = useState()
+    const [Filters, setFilters] = useState({
+        continents: [],
+        price: []
+    })
     useEffect(() => {
-        getProducts()
+
+        const variables = {
+            skip: Skip,
+            limmit: Limit
+        }
+
+        getProducts(variables)
     }, [])
 
-    const getProducts = () => {
-        Axios.post('/api/product/getProducts')
+    const getProducts = (variables) => {
+        Axios.post('/api/product/getProducts', variables)
             .then(response => {
                 if (response.data.success) {
-                    setProducts(response.data.products)
+                    if (variables.loadMore) {
+                        setProducts([...Products, ...response.data.products])
+                    } else {
+                        setProducts(response.data.products)
+                    }
+                    setPostSize(response.data.postSize)
                     console.log(response.data.products)
                 } else {
                     console.log('Failed to load products!')
@@ -24,11 +43,55 @@ function LandingPage() {
             })
     }
 
+    const onLoadMore = () => {
+        let skip = Skip + Limit;
+        const variables = {
+            skip: skip,
+            limit: Limit,
+            loadMore: true,
+            filters: Filters
+        }
+        getProducts(variables)
+        setSkip(skip)
+    }
+
+    const handleFilters = (filters, category) => {
+        const newFilters = { ...Filters }
+
+        newFilters[category] = filters
+
+        if (category === 'continents') {
+            showFilteredResults(newFilters)
+            setFilters(newFilters)
+            console.log(newFilters)
+        }
+    }
+
+    const showFilteredResults = (filters) => {
+        const variables = {
+            skip: 0,
+            limt: Limit,
+            filters: filters
+        }
+        getProducts(variables)
+        setSkip(0)
+    }
+
     return (
         <div style={{ width: '85%', margin: '3rem auto' }}>
             <div style={{ textAlign: 'center' }}>
                 <h2> Let's share your love <Icon type='heart' /></h2>
             </div>
+
+            {/* Filter Section */}
+            <Row gutter={[16, 16]}>
+                <Col lg={12} xs={24}>
+                    <CheckBox list={continents} handleFilters={filters => handleFilters(filters, "continents")} />
+                </Col>
+                <Col lg={12} xs={24}>
+                    <CheckBox list={continents} handleFilters={filters => handleFilters(filters, "continents")} />
+                </Col>
+            </Row>
 
             {Products.length === 0 ?
                 <div style={{ display: 'flex', height: '300px', justifyContent: 'center', alignItems: 'center' }}>
@@ -55,6 +118,13 @@ function LandingPage() {
                     </Row>
                 </div>
             }
+            <br /><br />
+            {PostSize > Limit &&
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <button onClick={onLoadMore}>Load More</button>
+                </div>
+            }
+
         </div>
 
     )

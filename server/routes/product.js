@@ -48,10 +48,32 @@ router.post('/uploadProduct', auth, (req, res) => {
 })
 
 router.post('/getProducts', (req, res) => {
-    Product.find()
+    let order = req.body.order ? req.body.order : "asc";
+    let sortBy = req.body.sortBy ? req.body.sortBy : "_id";
+    let limit = req.body.limit ? parseInt(req.body.limit) : 50;
+    let skip = parseInt(req.body.skip);
+
+    //now we get filter conditions and modify this funciton
+    //filters have 2 type: continents and price but right now we only need continents
+    let findArgs = {}
+    console.log(req.body.filters)
+    for (let key in req.body.filters) {
+        if (req.body.filters[key].length > 0) {
+            if (key === 'continents') {
+                findArgs[key] = req.body.filters[key];
+            }
+        }
+    }
+
+
+    Product.find(findArgs)
+        .populate("writer")
+        .sort([[sortBy, order]])
+        .skip(skip)
+        .limit(limit)
         .exec((err, products) => {
             if (err) return res.status(400).json({ success: false, err })
-            return res.status(200).json({ success: true, products })
+            return res.status(200).json({ success: true, products, postSize: products.length })
         })
 })
 
